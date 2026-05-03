@@ -107,7 +107,7 @@ class SettingKeys {
 // ── App Strings ───────────────────────────────────────────────────────────────
 class AppStrings {
   static const String appName = 'Tour Manager';
-  static const String currency = '₵';
+  static const String currency = 'GHS';
   static const String defaultTnC =
       'By signing this agreement, the client acknowledges and accepts the terms '
       'and conditions set forth by the travel agency. All bookings are subject '

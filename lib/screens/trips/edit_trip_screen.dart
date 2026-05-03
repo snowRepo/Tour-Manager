@@ -5,8 +5,9 @@ import '../../constants/app_constants.dart';
 import '../../models/trip_model.dart';
 import '../../providers/trip_provider.dart';
 import '../../providers/client_provider.dart';
-import '../../models/client_model.dart';
 import '../../database/db_helper.dart';
+import '../../widgets/app_banner.dart';
+import '../../widgets/screen_background.dart';
 
 class EditTripScreen extends StatefulWidget {
   final TripModel trip;
@@ -21,7 +22,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
   late final TextEditingController _destinationCtrl;
   late final TextEditingController _costCtrl;
 
-  ClientModel? _selectedClient;
+  int? _selectedClientId;
   late DateTime _departureDate;
   late DateTime _returnDate;
   late String _status;
@@ -40,18 +41,8 @@ class _EditTripScreenState extends State<EditTripScreen> {
     _returnDate = DateTime.tryParse(t.returnDate) ?? DateTime.now();
     _status = t.status;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      context.read<ClientProvider>().loadClients();
-      final clients = context.read<ClientProvider>().clients;
-      setState(() {
-        _selectedClient = clients.firstWhere(
-          (c) => c.id == widget.trip.clientId,
-          orElse: () => clients.isNotEmpty ? clients.first : ClientModel(
-            firstName: '', lastName: '', createdAt: '', updatedAt: ''),
-        );
-      });
-      final payments = await DbHelper().getPaymentsByTrip(t.id!);
-      setState(() => _hasPayments = payments.isNotEmpty);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadClientsAndPayments();
     });
   }
 
@@ -60,6 +51,23 @@ class _EditTripScreenState extends State<EditTripScreen> {
     _destinationCtrl.dispose();
     _costCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadClientsAndPayments() async {
+    final clientProvider = context.read<ClientProvider>();
+    await clientProvider.loadClients();
+    if (!mounted) return;
+
+    final clients = clientProvider.clients;
+    setState(() {
+      _selectedClientId = clients.any((c) => c.id == widget.trip.clientId)
+          ? widget.trip.clientId
+          : null;
+    });
+
+    final payments = await DbHelper().getPaymentsByTrip(widget.trip.id!);
+    if (!mounted) return;
+    setState(() => _hasPayments = payments.isNotEmpty);
   }
 
   Future<void> _pickDate(bool isDeparture) async {
@@ -82,8 +90,15 @@ class _EditTripScreenState extends State<EditTripScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedClientId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a client')));
+      return;
+    }
 
     final newCost = double.parse(_costCtrl.text.replaceAll(',', ''));
+    final tripProvider = context.read<TripProvider>();
     if (_hasPayments && newCost != widget.trip.totalCost) {
       final confirm = await showDialog<bool>(
         context: context,
@@ -94,11 +109,13 @@ class _EditTripScreenState extends State<EditTripScreen> {
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
             FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Continue')),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Continue'),
+            ),
           ],
         ),
       );
@@ -106,8 +123,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
     }
 
     setState(() => _isLoading = true);
+    final selectedClientId = _selectedClientId ?? widget.trip.clientId;
     final updated = widget.trip.copyWith(
-      clientId: _selectedClient?.id ?? widget.trip.clientId,
+      clientId: selectedClientId,
       destination: _destinationCtrl.text.trim(),
       departureDate: _departureDate.toIso8601String(),
       returnDate: _returnDate.toIso8601String(),
@@ -115,10 +133,13 @@ class _EditTripScreenState extends State<EditTripScreen> {
       status: _status,
       updatedAt: DateTime.now().toIso8601String(),
     );
-    await context.read<TripProvider>().updateTrip(updated);
+    await tripProvider.updateTrip(updated);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trip updated'), backgroundColor: AppColors.success),
+      showAppBanner(
+        context,
+        'Trip updated',
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline,
       );
       Navigator.pop(context);
     }
@@ -130,84 +151,105 @@ class _EditTripScreenState extends State<EditTripScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Trip')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              DropdownButtonFormField<ClientModel>(
-                initialValue: _selectedClient,
-                decoration: const InputDecoration(
-                  labelText: 'Client *',
-                  prefixIcon: Icon(Icons.person_outline),
+      body: ScreenBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                DropdownButtonFormField<int?>(
+                  initialValue: _selectedClientId,
+                  decoration: const InputDecoration(
+                    labelText: 'Client *',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Select a client'),
+                    ),
+                    ...clients.map(
+                      (c) => DropdownMenuItem<int?>(
+                        value: c.id,
+                        child: Text(c.fullName),
+                      ),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() => _selectedClientId = v),
+                  validator: (v) => v == null ? 'Please select a client' : null,
                 ),
-                items: clients
-                    .map((c) => DropdownMenuItem(
-                          value: c,
-                          child: Text(c.fullName),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedClient = v),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _destinationCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Destination *',
-                  prefixIcon: Icon(Icons.location_on_outlined),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _destinationCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Destination *',
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Required' : null,
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: _datePicker('Departure', _departureDate, true)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _datePicker('Return', _returnDate, false)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _costCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Total Cost *',
-                  prefixText: '₵ ',
-                  prefixIcon: Icon(Icons.attach_money_rounded),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _datePicker('Departure', _departureDate, true),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: _datePicker('Return', _returnDate, false)),
+                  ],
                 ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Required';
-                  final p = double.tryParse(v.replaceAll(',', ''));
-                  if (p == null || p <= 0) return 'Enter a valid amount';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _status,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  prefixIcon: Icon(Icons.flag_outlined),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _costCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Total Cost *',
+                    prefixText: 'GHS ',
+                    prefixIcon: Icon(Icons.attach_money_rounded),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Required';
+                    final p = double.tryParse(v.replaceAll(',', ''));
+                    if (p == null || p <= 0) return 'Enter a valid amount';
+                    return null;
+                  },
                 ),
-                items: TripStatus.all
-                    .map((s) => DropdownMenuItem(
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: _status,
+                  decoration: const InputDecoration(
+                    labelText: 'Status',
+                    prefixIcon: Icon(Icons.flag_outlined),
+                  ),
+                  items: TripStatus.all
+                      .map(
+                        (s) => DropdownMenuItem(
                           value: s,
                           child: Text(TripStatus.label(s)),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => _status = v ?? _status),
-              ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _isLoading ? null : _save,
-                child: _isLoading
-                    ? const SizedBox(height: 20, width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Save Changes'),
-              ),
-            ],
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) => setState(() => _status = v ?? _status),
+                ),
+                const SizedBox(height: 32),
+                FilledButton(
+                  onPressed: _isLoading ? null : _save,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Save Changes'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -223,8 +265,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
           labelText: label,
           prefixIcon: const Icon(Icons.calendar_today_outlined),
         ),
-        child: Text(_df.format(date),
-            style: const TextStyle(fontSize: 14)),
+        child: Text(_df.format(date), style: const TextStyle(fontSize: 14)),
       ),
     );
   }

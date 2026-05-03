@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../models/client_model.dart';
 import '../../providers/client_provider.dart';
+import '../../widgets/screen_background.dart';
 
 class EditClientScreen extends StatefulWidget {
   final ClientModel client;
@@ -37,9 +38,15 @@ class _EditClientScreenState extends State<EditClientScreen> {
   @override
   void dispose() {
     for (final c in [
-      _firstNameCtrl, _lastNameCtrl, _otherNamesCtrl,
-      _phoneCtrl, _emailCtrl, _notesCtrl
-    ]) { c.dispose(); }
+      _firstNameCtrl,
+      _lastNameCtrl,
+      _otherNamesCtrl,
+      _phoneCtrl,
+      _emailCtrl,
+      _notesCtrl,
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -58,7 +65,10 @@ class _EditClientScreenState extends State<EditClientScreen> {
     await context.read<ClientProvider>().updateClient(updated);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Client updated'), backgroundColor: AppColors.success),
+        const SnackBar(
+          content: Text('Client updated'),
+          backgroundColor: AppColors.success,
+        ),
       );
       Navigator.pop(context);
     }
@@ -67,57 +77,87 @@ class _EditClientScreenState extends State<EditClientScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit ${widget.client.firstName}'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(child: _field(_firstNameCtrl, 'First Name *', required: true)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _field(_lastNameCtrl, 'Last Name *', required: true)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _field(_otherNamesCtrl, 'Other Names'),
-              const SizedBox(height: 12),
-              _field(_phoneCtrl, 'Phone',
-                  icon: Icons.phone_outlined, keyboard: TextInputType.phone),
-              const SizedBox(height: 12),
-              _field(_emailCtrl, 'Email',
-                  icon: Icons.email_outlined,
-                  keyboard: TextInputType.emailAddress),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _notesCtrl,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Notes',
-                  alignLabelWithHint: true,
+      appBar: AppBar(title: Text('Edit ${widget.client.firstName}')),
+      body: ScreenBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _field(
+                        _firstNameCtrl,
+                        'First Name *',
+                        required: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _field(
+                        _lastNameCtrl,
+                        'Last Name *',
+                        required: true,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _isLoading ? null : _save,
-                child: _isLoading
-                    ? const SizedBox(height: 20, width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Save Changes'),
-              ),
-            ],
+                const SizedBox(height: 12),
+                _field(_otherNamesCtrl, 'Other Names'),
+                const SizedBox(height: 12),
+                _field(
+                  _phoneCtrl,
+                  'Phone',
+                  icon: Icons.phone_outlined,
+                  keyboard: TextInputType.phone,
+                ),
+                const SizedBox(height: 12),
+                _field(
+                  _emailCtrl,
+                  'Email',
+                  icon: Icons.email_outlined,
+                  keyboard: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _notesCtrl,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                FilledButton(
+                  onPressed: _isLoading ? null : _save,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Save Changes'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _field(TextEditingController ctrl, String label,
-      {bool required = false, IconData? icon, TextInputType? keyboard}) {
+  Widget _field(
+    TextEditingController ctrl,
+    String label, {
+    bool required = false,
+    IconData? icon,
+    TextInputType? keyboard,
+  }) {
     return TextFormField(
       controller: ctrl,
       keyboardType: keyboard,

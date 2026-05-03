@@ -315,7 +315,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                       ),
                       decoration: const InputDecoration(
                         labelText: 'Amount *',
-                        prefixText: '₵ ',
+                        prefixText: 'GHS ',
                         prefixIcon: Icon(Icons.currency_exchange),
                         helperText: 'Enter negative amount for a refund',
                       ),

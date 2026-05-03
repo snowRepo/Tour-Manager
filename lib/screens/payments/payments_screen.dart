@@ -20,13 +20,31 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   final _db = DbHelper();
   final Map<int, TripModel?> _tripCache = {};
   final Map<int, ClientModel?> _clientCache = {};
+  late final TextEditingController _searchCtrl;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PaymentProvider>().loadAllPayments();
-    });
+    _searchCtrl = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    await context.read<PaymentProvider>().loadAllPayments();
+    if (!mounted) return;
+
+    final payments = context.read<PaymentProvider>().payments;
+    final tripIds = payments.map((p) => p.tripId).toSet();
+    for (final tripId in tripIds) {
+      await _loadTripAndClient(tripId);
+    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadTripAndClient(int tripId) async {
@@ -44,6 +62,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<PaymentProvider>();
+    final query = _searchCtrl.text.toLowerCase();
+    final filteredPayments = prov.payments.where((p) {
+      final trip = _tripCache[p.tripId];
+      final client = trip != null ? _clientCache[trip.clientId] : null;
+      return (client?.fullName.toLowerCase().contains(query) ?? false) ||
+          (trip?.destination.toLowerCase().contains(query) ?? false);
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('All Payments')),
@@ -51,127 +76,150 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AddPaymentScreen()),
-        ).then((_) => prov.loadAllPayments()),
+        ).then((_) => _loadData()),
         icon: const Icon(Icons.add),
         label: const Text('New Payment'),
       ),
       body: ScreenBackground(
-        child: prov.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : prov.payments.isEmpty
-            ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.receipt_long_outlined,
-                      size: 56,
-                      color: AppColors.divider,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'No payments recorded yet.',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Tap "New Payment" to add one.',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ],
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Search by client or destination',
+                  prefixIcon: Icon(Icons.search),
                 ),
-              )
-            : RefreshIndicator(
-                onRefresh: prov.loadAllPayments,
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  itemCount: prov.payments.length,
-                  itemBuilder: (_, i) {
-                    final payment = prov.payments[i];
-                    return FutureBuilder(
-                      future: _loadTripAndClient(payment.tripId),
-                      builder: (context, snapshot) {
-                        final trip = _tripCache[payment.tripId];
-                        final client = trip != null
-                            ? _clientCache[trip.clientId]
-                            : null;
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          child: ListTile(
-                            leading: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: payment.isRefund
-                                    ? AppColors.error.withOpacity(0.1)
-                                    : AppColors.success.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                payment.isRefund ? Icons.undo : Icons.payment,
-                                color: payment.isRefund
-                                    ? AppColors.error
-                                    : AppColors.success,
-                              ),
-                            ),
-                            title: Text(
-                              prov.formatCurrency(payment.amount.abs()),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: payment.isRefund
-                                    ? AppColors.error
-                                    : AppColors.success,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  client?.fullName ?? 'Unknown Client',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  trip?.destination ?? 'Unknown Trip',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                Text(
-                                  PaymentMethod.label(payment.paymentMethod),
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: Text(
-                              _formatDate(payment.createdAt),
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    PaymentDetailScreen(paymentId: payment.id!),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+                onChanged: (_) => setState(() {}),
               ),
+            ),
+            Expanded(
+              child: prov.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : prov.payments.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 56,
+                            color: AppColors.divider,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'No payments recorded yet.',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Tap "New Payment" to add one.',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        itemCount: filteredPayments.length,
+                        itemBuilder: (_, i) {
+                          final payment = filteredPayments[i];
+                          return FutureBuilder(
+                            future: _loadTripAndClient(payment.tripId),
+                            builder: (context, snapshot) {
+                              final trip = _tripCache[payment.tripId];
+                              final client = trip != null
+                                  ? _clientCache[trip.clientId]
+                                  : null;
+
+                              return Card(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                                child: ListTile(
+                                  leading: Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: payment.isRefund
+                                          ? AppColors.error.withOpacity(0.1)
+                                          : AppColors.success.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      payment.isRefund
+                                          ? Icons.undo
+                                          : Icons.payment,
+                                      color: payment.isRefund
+                                          ? AppColors.error
+                                          : AppColors.success,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    prov.formatCurrency(payment.amount.abs()),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: payment.isRefund
+                                          ? AppColors.error
+                                          : AppColors.success,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        client?.fullName ?? 'Unknown Client',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        trip?.destination ?? 'Unknown Trip',
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      Text(
+                                        PaymentMethod.label(
+                                          payment.paymentMethod,
+                                        ),
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: Text(
+                                    _formatDate(payment.createdAt),
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PaymentDetailScreen(
+                                        paymentId: payment.id!,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
