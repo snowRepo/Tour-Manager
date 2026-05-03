@@ -21,6 +21,7 @@ class _EditClientScreenState extends State<EditClientScreen> {
   late final TextEditingController _phoneCtrl;
   late final TextEditingController _emailCtrl;
   late final TextEditingController _notesCtrl;
+  late String _selectedGender;
   bool _isLoading = false;
 
   @override
@@ -33,6 +34,7 @@ class _EditClientScreenState extends State<EditClientScreen> {
     _phoneCtrl = TextEditingController(text: c.phone);
     _emailCtrl = TextEditingController(text: c.email);
     _notesCtrl = TextEditingController(text: c.notes);
+    _selectedGender = c.gender;
   }
 
   @override
@@ -60,6 +62,7 @@ class _EditClientScreenState extends State<EditClientScreen> {
       phone: _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
       notes: _notesCtrl.text.trim(),
+      gender: _selectedGender,
       updatedAt: DateTime.now().toIso8601String(),
     );
     await context.read<ClientProvider>().updateClient(updated);
@@ -106,6 +109,22 @@ class _EditClientScreenState extends State<EditClientScreen> {
                 ),
                 const SizedBox(height: 12),
                 _field(_otherNamesCtrl, 'Other Names'),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  decoration: const InputDecoration(
+                    labelText: 'Gender',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Male', child: Text('Male')),
+                    DropdownMenuItem(value: 'Female', child: Text('Female')),
+                    DropdownMenuItem(value: 'Other', child: Text('Other')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _selectedGender = v);
+                  },
+                ),
                 const SizedBox(height: 12),
                 _field(
                   _phoneCtrl,

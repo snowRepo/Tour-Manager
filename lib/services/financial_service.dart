@@ -25,8 +25,8 @@ class FinancialService {
         .fold<double>(0.0, (sum, p) => sum + p.amount.abs());
   }
 
-  /// Format double as GHS currency string e.g. GHS1,234.56
-  String formatCurrency(double amount) => 'GHS${_fmt.format(amount)}';
+  /// Format double as GHS currency string e.g. GHS 1,234.56
+  String formatCurrency(double amount) => 'GHS ${_fmt.format(amount)}';
 
   bool isFullyPaid(double balance) => balance <= 0.0;
   bool isOverpaid(double balance) => balance < 0.0;

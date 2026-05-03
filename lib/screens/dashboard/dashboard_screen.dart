@@ -56,6 +56,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final tripProv = context.watch<TripProvider>();
     final recentTrips = tripProv.trips.take(5).toList();
 
+    // Determine a responsive aspect ratio for the stats grid
+    final screenWidth = MediaQuery.of(context).size.width;
+    final statsAspectRatio = screenWidth < 600 ? 1.1 : 1.4;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -129,7 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 1.3,
+                          childAspectRatio: statsAspectRatio,
                           children: [
                             StatCard(
                               label: 'Total Clients',

@@ -40,8 +40,16 @@ dependencies:
   # Image picker
   image_picker: ^1.1.2
 
+  # Splash screen
+  flutter_native_splash: ^2.4.2
+
   # Utilities
   uuid: ^4.5.1
+
+flutter_native_splash:
+  color: "#2E7D32"
+  android: true
+  ios: false
 
 dev_dependencies:
   flutter_test:

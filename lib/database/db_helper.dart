@@ -24,10 +24,17 @@ class DbHelper {
 
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onConfigure: (db) async => await db.execute('PRAGMA foreign_keys = ON'),
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute("ALTER TABLE clients ADD COLUMN gender TEXT DEFAULT 'Other'");
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -48,6 +55,7 @@ class DbHelper {
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
         other_names TEXT DEFAULT '',
+        gender TEXT DEFAULT 'Other',
         phone TEXT DEFAULT '',
         email TEXT DEFAULT '',
         notes TEXT DEFAULT '',

@@ -21,6 +21,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  String _selectedGender = 'Other';
   bool _isLoading = false;
 
   @override
@@ -49,6 +50,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       phone: _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
       notes: _notesCtrl.text.trim(),
+      gender: _selectedGender,
       createdAt: now,
       updatedAt: now,
     );
@@ -101,6 +103,22 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 _label('Additional Info'),
                 const SizedBox(height: 12),
                 _field(_otherNamesCtrl, 'Other Names'),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  decoration: const InputDecoration(
+                    labelText: 'Gender',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Male', child: Text('Male')),
+                    DropdownMenuItem(value: 'Female', child: Text('Female')),
+                    DropdownMenuItem(value: 'Other', child: Text('Other')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _selectedGender = v);
+                  },
+                ),
                 const SizedBox(height: 12),
                 _field(
                   _phoneCtrl,

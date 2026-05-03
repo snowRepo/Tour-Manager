@@ -3,6 +3,7 @@ class ClientModel {
   final String firstName;
   final String lastName;
   final String otherNames;
+  final String gender;
   final String phone;
   final String email;
   final String notes;
@@ -14,6 +15,7 @@ class ClientModel {
     required this.firstName,
     required this.lastName,
     this.otherNames = '',
+    this.gender = 'Other',
     this.phone = '',
     this.email = '',
     this.notes = '',
@@ -33,6 +35,7 @@ class ClientModel {
         'first_name': firstName,
         'last_name': lastName,
         'other_names': otherNames,
+        'gender': gender,
         'phone': phone,
         'email': email,
         'notes': notes,
@@ -45,6 +48,7 @@ class ClientModel {
         firstName: map['first_name'] as String,
         lastName: map['last_name'] as String,
         otherNames: map['other_names'] as String? ?? '',
+        gender: map['gender'] as String? ?? 'Other',
         phone: map['phone'] as String? ?? '',
         email: map['email'] as String? ?? '',
         notes: map['notes'] as String? ?? '',
@@ -57,6 +61,7 @@ class ClientModel {
     String? firstName,
     String? lastName,
     String? otherNames,
+    String? gender,
     String? phone,
     String? email,
     String? notes,
@@ -68,6 +73,7 @@ class ClientModel {
         firstName: firstName ?? this.firstName,
         lastName: lastName ?? this.lastName,
         otherNames: otherNames ?? this.otherNames,
+        gender: gender ?? this.gender,
         phone: phone ?? this.phone,
         email: email ?? this.email,
         notes: notes ?? this.notes,

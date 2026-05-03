@@ -216,6 +216,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 8),
+          _infoRow(Icons.person_outline, c.gender),
           if (c.phone.isNotEmpty) _infoRow(Icons.phone_outlined, c.phone),
           if (c.email.isNotEmpty) _infoRow(Icons.email_outlined, c.email),
           if (c.notes.isNotEmpty) _infoRow(Icons.notes_rounded, c.notes),

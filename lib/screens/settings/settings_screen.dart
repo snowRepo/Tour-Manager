@@ -435,7 +435,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text('Save T&C'),
+                                  : const FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text('Save T&C'),
+                                    ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -454,14 +457,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.print_rounded, size: 16),
-                                        SizedBox(width: 6),
-                                        Text('Print T&C'),
-                                      ],
+                                  : const FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.print_rounded, size: 16),
+                                          SizedBox(width: 6),
+                                          Text('Print T&C'),
+                                        ],
+                                      ),
                                     ),
                             ),
                           ),
@@ -550,26 +556,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Icon(icon, color: AppColors.primary, size: 20),
         ),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            if (subtitle != null)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                subtitle,
+                title,
                 style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
               ),
-          ],
+              if (subtitle != null)
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );
@@ -601,12 +609,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               fontSize: 14,
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: AppColors.textPrimary,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],
