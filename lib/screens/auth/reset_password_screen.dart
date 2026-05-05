@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_banner.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -46,11 +47,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     if (exists) {
       setState(() => _usernameValidated = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Username verified. Enter your PIN.'),
-          backgroundColor: AppColors.success,
-        ),
+      showAppBanner(
+        context,
+        'Username verified. Enter your PIN.',
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline,
       );
     } else {
       if (mounted) {
@@ -115,11 +116,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset successfully'),
-          backgroundColor: AppColors.success,
-        ),
+      showAppBanner(
+        context,
+        'Password reset successfully',
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline,
       );
       Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
     }

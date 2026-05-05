@@ -19,7 +19,7 @@ class PaymentTile extends StatelessWidget {
         .format(DateTime.tryParse(payment.createdAt) ?? DateTime.now());
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -43,12 +43,15 @@ class PaymentTile extends StatelessWidget {
         ),
         title: Row(
           children: [
-            Text(
-              fin.formatCurrency(payment.amount.abs()),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: color,
+            Flexible(
+              child: Text(
+                fin.formatCurrency(payment.amount.abs()),
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -61,6 +64,7 @@ class PaymentTile extends StatelessWidget {
               ),
               child: Text(
                 PaymentMethod.label(payment.paymentMethod),
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 10,
                   color: AppColors.primary,

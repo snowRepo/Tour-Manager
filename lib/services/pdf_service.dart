@@ -59,7 +59,7 @@ class PdfService {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(40),
+        margin: const pw.EdgeInsets.only(left: 40, top: 80, right: 40, bottom: 40),
         build: (context) => [
           // Header
           _header(bizName, bizPhone, bizEmail, bizLogo),
@@ -162,7 +162,7 @@ class PdfService {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(40),
+        margin: const pw.EdgeInsets.only(left: 40, top: 80, right: 40, bottom: 40),
         build: (context) => [
           _header(bizName, bizPhone, bizEmail, bizLogo),
           pw.SizedBox(height: 16),
@@ -192,33 +192,35 @@ class PdfService {
             margin: const pw.EdgeInsets.only(right: 16),
             child: pw.Image(
               pw.MemoryImage(base64Decode(logoBase64)),
-              width: 60,
-              height: 60,
+              width: 120, // Increased to allow wider logos
+              height: 80, // Increased to prevent vertical clipping
               fit: pw.BoxFit.contain,
             ),
           ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              name,
-              style: pw.TextStyle(
-                fontSize: 20,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.blueGrey800,
-              ),
-            ),
-            if (phone.isNotEmpty)
+        pw.Expanded(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
               pw.Text(
-                'Phone: $phone',
-                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                name,
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blueGrey800,
+                ),
               ),
-            if (email.isNotEmpty)
-              pw.Text(
-                'Email: $email',
-                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-              ),
-          ],
+              if (phone.isNotEmpty)
+                pw.Text(
+                  'Phone: $phone',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                ),
+              if (email.isNotEmpty)
+                pw.Text(
+                  'Email: $email',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                ),
+            ],
+          ),
         ),
       ],
     );

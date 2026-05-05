@@ -6,6 +6,7 @@ import '../../providers/trip_provider.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/client_tile.dart';
 import '../../widgets/confirm_dialog.dart';
+import '../../widgets/app_banner.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -199,11 +200,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Client deleted'),
-          backgroundColor: AppColors.success,
-        ),
+      showAppBanner(
+        context,
+        'Client deleted',
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline,
       );
     }
   }

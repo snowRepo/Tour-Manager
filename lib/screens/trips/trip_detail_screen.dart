@@ -150,6 +150,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                   children: [
                     Expanded(
                       child: FilledButton.tonal(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
                         onPressed: () async {
                           await Navigator.pushNamed(
                             context,
@@ -162,8 +165,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add_rounded, size: 18),
-                            SizedBox(width: 6),
-                            Text('Add Payment'),
+                            SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                'Add Payment',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -174,6 +182,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                         onPressed: _isPrinting ? null : _printAgreement,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primaryDark,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                         ),
                         child: _isPrinting
                             ? const SizedBox(
@@ -188,8 +197,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.print_rounded, size: 18),
-                                  SizedBox(width: 6),
-                                  Text('Print Agreement'),
+                                  SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      'Print Agreement',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ],
                               ),
                       ),
@@ -202,11 +216,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Payment History (${paymentProv.payments.length})',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        'Payment History (${paymentProv.payments.length})',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -316,10 +332,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Financial Summary',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              const Expanded(
+                child: Text(
+                  'Financial Summary',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                ),
               ),
+              const SizedBox(width: 8),
               BalanceBadge(balance: balance, totalCost: _trip!.totalCost),
             ],
           ),
@@ -359,13 +378,16 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             value,
             style: TextStyle(
@@ -386,11 +408,15 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         children: [
           Icon(icon, size: 16, color: AppColors.textSecondary),
           const SizedBox(width: 8),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
+          Expanded(
+            child: Text(
+              text,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ],

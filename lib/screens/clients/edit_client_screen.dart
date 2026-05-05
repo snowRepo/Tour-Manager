@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../models/client_model.dart';
 import '../../providers/client_provider.dart';
+import '../../widgets/app_banner.dart';
 import '../../widgets/screen_background.dart';
 
 class EditClientScreen extends StatefulWidget {
@@ -67,11 +68,11 @@ class _EditClientScreenState extends State<EditClientScreen> {
     );
     await context.read<ClientProvider>().updateClient(updated);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Client updated'),
-          backgroundColor: AppColors.success,
-        ),
+      showAppBanner(
+        context,
+        'Client updated',
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline,
       );
       Navigator.pop(context);
     }

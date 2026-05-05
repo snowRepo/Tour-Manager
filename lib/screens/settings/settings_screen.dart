@@ -299,7 +299,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                         child: Image.memory(
                                           base64Decode(_logoPath!),
-                                          fit: BoxFit.cover,
+                                          fit: BoxFit.contain,
                                           width: 100,
                                           height: 100,
                                         ),
