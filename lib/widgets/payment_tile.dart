@@ -15,8 +15,11 @@ class PaymentTile extends StatelessWidget {
     final fin = FinancialService();
     final isRefund = payment.isRefund;
     final color = isRefund ? AppColors.error : AppColors.success;
-    final dateStr = DateFormat('dd MMM yyyy · HH:mm')
-        .format(DateTime.tryParse(payment.createdAt) ?? DateTime.now());
+    final dateStr = DateFormat('dd MMM yyyy · HH:mm').format(
+      DateTime.tryParse(payment.paymentDate) ??
+          DateTime.tryParse(payment.createdAt) ??
+          DateTime.now(),
+    );
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -26,8 +29,7 @@ class PaymentTile extends StatelessWidget {
         side: const BorderSide(color: AppColors.divider),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
           width: 44,
           height: 44,
@@ -56,8 +58,7 @@ class PaymentTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6),
@@ -75,8 +76,7 @@ class PaymentTile extends StatelessWidget {
             if (isRefund) ...[
               const SizedBox(width: 6),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.error.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
@@ -96,21 +96,38 @@ class PaymentTile extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(dateStr,
+            Text(
+              dateStr,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if ((payment.referenceNumber ?? '').isNotEmpty)
+              Text(
+                'Ref: ${payment.referenceNumber}',
                 style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary)),
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             if ((payment.note ?? '').isNotEmpty)
               Text(
                 payment.note!,
                 style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary),
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
           ],
         ),
         trailing: onDelete != null
             ? IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    color: AppColors.error, size: 20),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                  size: 20,
+                ),
                 onPressed: onDelete,
               )
             : null,

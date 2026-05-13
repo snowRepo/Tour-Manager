@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import '../../providers/settings_provider.dart';
 import '../../database/db_helper.dart';
 import '../../services/pdf_service.dart';
 import '../../services/financial_service.dart';
+import '../../widgets/app_banner.dart';
 import '../../widgets/balance_badge.dart';
 import '../../widgets/payment_tile.dart';
 import '../../widgets/confirm_dialog.dart';
@@ -75,6 +77,48 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     }
   }
 
+  Future<void> _deleteTrip() async {
+    if (_trip == null) return;
+
+    // Check for outstanding balance
+    final balance = context.read<PaymentProvider>().calculateBalance(
+      _trip!.totalCost,
+    );
+
+    if (balance > Decimal.zero) {
+      if (!mounted) return;
+      showAppBanner(
+        context,
+        'Cannot delete trip with outstanding balance: ${_fin.formatCurrency(balance)}',
+        backgroundColor: AppColors.error,
+        icon: Icons.error_outline,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    final confirm = await ConfirmDialog.show(
+      context,
+      title: 'Delete Trip',
+      message:
+          'Deleting this trip will also remove all its payment records. This cannot be undone.',
+      confirmLabel: 'Delete Trip',
+    );
+    if (!confirm || !mounted) return;
+
+    setState(() => _isLoading = true);
+    await _db.deleteTrip(_trip!.id!);
+    if (!mounted) return;
+
+    showAppBanner(
+      context,
+      'Trip deleted successfully',
+      backgroundColor: AppColors.success,
+      icon: Icons.check_circle_outline,
+    );
+    Navigator.pop(context);
+  }
+
   Future<void> _deletePayment(int id) async {
     final first = await ConfirmDialog.show(
       context,
@@ -125,6 +169,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               );
               if (context.mounted) _load();
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            tooltip: 'Delete Trip',
+            onPressed: _deleteTrip,
           ),
         ],
       ),
@@ -318,7 +367,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-  Widget _financialCard(PaymentProvider prov, double balance) {
+  Widget _financialCard(PaymentProvider prov, Decimal balance) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -349,7 +398,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             _fin.formatCurrency(prov.totalPaid),
             color: AppColors.success,
           ),
-          if (prov.totalRefunded > 0)
+          if (prov.totalRefunded > Decimal.zero)
             _finRow(
               'Total Refunded',
               _fin.formatCurrency(prov.totalRefunded),
@@ -357,9 +406,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             ),
           const Divider(height: 20),
           _finRow(
-            balance < 0 ? 'Overpaid By' : 'Outstanding Balance',
+            balance < Decimal.zero ? 'Overpaid By' : 'Outstanding Balance',
             _fin.formatCurrency(balance.abs()),
-            color: balance <= 0 ? AppColors.success : AppColors.warning,
+            color: balance <= Decimal.zero
+                ? AppColors.success
+                : AppColors.warning,
             bold: true,
           ),
         ],

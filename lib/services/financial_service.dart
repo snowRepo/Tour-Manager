@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
 import '../models/payment_model.dart';
 
@@ -6,28 +7,32 @@ class FinancialService {
 
   /// Outstanding balance = totalCost − sum(payments)
   /// Positive → client owes money; Negative → client is overpaid
-  double calculateBalance(double totalCost, List<PaymentModel> payments) {
-    final paid = payments.fold<double>(0.0, (sum, p) => sum + p.amount);
+  Decimal calculateBalance(Decimal totalCost, List<PaymentModel> payments) {
+    final paid = payments.fold<Decimal>(
+      Decimal.zero,
+      (sum, p) => sum + p.amount,
+    );
     return totalCost - paid;
   }
 
   /// Sum of all positive payment amounts
-  double getTotalPaid(List<PaymentModel> payments) {
+  Decimal getTotalPaid(List<PaymentModel> payments) {
     return payments
-        .where((p) => p.amount > 0)
-        .fold<double>(0.0, (sum, p) => sum + p.amount);
+        .where((p) => p.amount > Decimal.zero)
+        .fold<Decimal>(Decimal.zero, (sum, p) => sum + p.amount);
   }
 
   /// Absolute sum of all negative payment amounts (refunds)
-  double getTotalRefunded(List<PaymentModel> payments) {
+  Decimal getTotalRefunded(List<PaymentModel> payments) {
     return payments
-        .where((p) => p.amount < 0)
-        .fold<double>(0.0, (sum, p) => sum + p.amount.abs());
+        .where((p) => p.amount < Decimal.zero)
+        .fold<Decimal>(Decimal.zero, (sum, p) => sum + p.amount.abs());
   }
 
-  /// Format double as GHS currency string e.g. GHS 1,234.56
-  String formatCurrency(double amount) => 'GHS ${_fmt.format(amount)}';
+  /// Format decimal as GHS currency string e.g. GHS 1,234.56
+  String formatCurrency(Decimal amount) =>
+      'GHS ${_fmt.format(amount.toDouble())}';
 
-  bool isFullyPaid(double balance) => balance <= 0.0;
-  bool isOverpaid(double balance) => balance < 0.0;
+  bool isFullyPaid(Decimal balance) => balance <= Decimal.zero;
+  bool isOverpaid(Decimal balance) => balance < Decimal.zero;
 }

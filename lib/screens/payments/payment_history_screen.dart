@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
@@ -65,7 +66,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
 
     final balance = _trip != null
         ? prov.calculateBalance(_trip!.totalCost)
-        : 0.0;
+        : Decimal.zero;
 
     return Scaffold(
       appBar: AppBar(title: Text(_trip?.destination ?? 'Payment History')),

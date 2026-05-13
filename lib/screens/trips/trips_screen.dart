@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
@@ -121,7 +122,7 @@ class _TripsScreenState extends State<TripsScreen> {
                         itemBuilder: (_, i) {
                           final trip = filtered[i];
                           final client = clientProv.getById(trip.clientId);
-                          return FutureBuilder<double>(
+                          return FutureBuilder<Decimal>(
                             future: _db
                                 .getPaymentsByTrip(trip.id!)
                                 .then(

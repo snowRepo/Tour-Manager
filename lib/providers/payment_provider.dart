@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import '../models/payment_model.dart';
 import '../database/db_helper.dart';
@@ -46,11 +47,11 @@ class PaymentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  double calculateBalance(double totalCost) =>
+  Decimal calculateBalance(Decimal totalCost) =>
       _fin.calculateBalance(totalCost, _payments);
 
-  double get totalPaid => _fin.getTotalPaid(_payments);
-  double get totalRefunded => _fin.getTotalRefunded(_payments);
+  Decimal get totalPaid => _fin.getTotalPaid(_payments);
+  Decimal get totalRefunded => _fin.getTotalRefunded(_payments);
 
-  String formatCurrency(double amount) => _fin.formatCurrency(amount);
+  String formatCurrency(Decimal amount) => _fin.formatCurrency(amount);
 }

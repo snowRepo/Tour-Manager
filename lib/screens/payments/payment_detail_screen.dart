@@ -1,5 +1,7 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../constants/app_constants.dart';
+import '../../models/client_model.dart';
 import '../../models/payment_model.dart';
 import '../../database/db_helper.dart';
 import '../../models/trip_model.dart';
@@ -19,6 +21,7 @@ class _PaymentDetailScreenState extends State<PaymentDetailScreen> {
   final _fin = FinancialService();
   PaymentModel? _payment;
   TripModel? _trip;
+  ClientModel? _client;
   bool _isLoading = true;
 
   @override
@@ -32,6 +35,9 @@ class _PaymentDetailScreenState extends State<PaymentDetailScreen> {
     _payment = await _db.getPaymentById(widget.paymentId);
     if (_payment != null) {
       _trip = await _db.getTripById(_payment!.tripId);
+      if (_trip != null) {
+        _client = await _db.getClientById(_trip!.clientId);
+      }
     }
     setState(() => _isLoading = false);
   }
@@ -49,7 +55,7 @@ class _PaymentDetailScreenState extends State<PaymentDetailScreen> {
       );
     }
 
-    final isRefund = _payment!.amount < 0;
+    final isRefund = _payment!.amount < Decimal.zero;
     final amount = _payment!.amount.abs();
 
     return Scaffold(
@@ -135,7 +141,7 @@ class _PaymentDetailScreenState extends State<PaymentDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Transaction recorded on ${_formatDate(_payment!.createdAt)}',
+                    'Payment date ${_formatDate(_payment!.paymentDate)}',
                     style: const TextStyle(
                       fontSize: 15,
                       color: AppColors.textSecondary,
@@ -154,11 +160,23 @@ class _PaymentDetailScreenState extends State<PaymentDetailScreen> {
                     PaymentMethod.label(_payment!.paymentMethod),
                   ),
                   const SizedBox(height: 16),
+                  if ((_payment!.referenceNumber ?? '').isNotEmpty) ...[
+                    _detailRow('Reference', _payment!.referenceNumber!),
+                    const SizedBox(height: 16),
+                  ],
                   if (_trip != null) ...[
                     _detailRow('Trip', _trip!.destination),
                     const SizedBox(height: 16),
                   ],
-                  _detailRow('Date', _formatDate(_payment!.createdAt)),
+                  if (_client != null &&
+                      _client!.passportNumber.isNotEmpty) ...[
+                    _detailRow('Passport Number', _client!.passportNumber),
+                    const SizedBox(height: 16),
+                  ],
+                  _detailRow(
+                    'Payment Date',
+                    _formatDate(_payment!.paymentDate),
+                  ),
                   if (_payment!.note != null && _payment!.note!.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     const Text(

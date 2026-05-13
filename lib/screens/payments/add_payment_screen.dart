@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
@@ -23,17 +24,20 @@ class AddPaymentScreen extends StatefulWidget {
 class _AddPaymentScreenState extends State<AddPaymentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountCtrl = TextEditingController();
+  final _referenceCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
   final _clientSearchCtrl = TextEditingController();
+  final _paymentDateCtrl = TextEditingController();
   final _db = DbHelper();
   final _fin = FinancialService();
 
   String _method = PaymentMethod.cash;
+  DateTime? _paymentDate;
   bool _isLoading = false;
   TripModel? _trip;
   ClientModel? _selectedClient;
   TripModel? _selectedTrip;
-  double _currentBalance = 0;
+  Decimal _currentBalance = Decimal.zero;
   List<ClientModel> _filteredClients = [];
   bool _showClientDropdown = false;
 
@@ -51,7 +55,10 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     _trip = await _db.getTripById(widget.tripId!);
     final payments = await _db.getPaymentsByTrip(widget.tripId!);
     setState(() {
-      _currentBalance = _fin.calculateBalance(_trip?.totalCost ?? 0, payments);
+      _currentBalance = _fin.calculateBalance(
+        _trip?.totalCost ?? Decimal.zero,
+        payments,
+      );
     });
   }
 
@@ -98,7 +105,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     final payments = await _db.getPaymentsByTrip(tripId);
     setState(() {
       _currentBalance = _fin.calculateBalance(
-        _selectedTrip?.totalCost ?? 0,
+        _selectedTrip?.totalCost ?? Decimal.zero,
         payments,
       );
     });
@@ -107,9 +114,26 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   @override
   void dispose() {
     _amountCtrl.dispose();
+    _referenceCtrl.dispose();
     _noteCtrl.dispose();
     _clientSearchCtrl.dispose();
+    _paymentDateCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickPaymentDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _paymentDate ?? now,
+      firstDate: DateTime(now.year - 5),
+      lastDate: now,
+    );
+    if (picked == null) return;
+    setState(() {
+      _paymentDate = picked;
+      _paymentDateCtrl.text = '${picked.day}/${picked.month}/${picked.year}';
+    });
   }
 
   Future<void> _save() async {
@@ -123,12 +147,36 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       return;
     }
 
+    final shouldRequireReference =
+        _method == PaymentMethod.mobileMoney ||
+        _method == PaymentMethod.bankTransfer;
+    if (shouldRequireReference && _referenceCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Reference number is required for the selected payment method',
+          ),
+        ),
+      );
+      return;
+    }
+    if (_paymentDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a payment date')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
-    final amount = double.parse(_amountCtrl.text.replaceAll(',', ''));
+    final amount = Decimal.parse(_amountCtrl.text.replaceAll(',', ''));
     final payment = PaymentModel(
       tripId: tripId,
       amount: amount,
       paymentMethod: _method,
+      referenceNumber: _referenceCtrl.text.trim().isEmpty
+          ? null
+          : _referenceCtrl.text.trim(),
+      paymentDate: _paymentDate!.toIso8601String(),
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
       createdAt: DateTime.now().toIso8601String(),
     );
@@ -136,7 +184,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     if (mounted) {
       showAppBanner(
         context,
-        amount < 0 ? 'Refund recorded' : 'Payment recorded',
+        amount < Decimal.zero ? 'Refund recorded' : 'Payment recorded',
         backgroundColor: AppColors.success,
         icon: Icons.check_circle_outline,
       );
@@ -256,14 +304,14 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color:
-                          (_currentBalance <= 0
+                          (_currentBalance <= Decimal.zero
                                   ? AppColors.success
                                   : AppColors.warning)
                               .withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color:
-                            (_currentBalance <= 0
+                            (_currentBalance <= Decimal.zero
                                     ? AppColors.success
                                     : AppColors.warning)
                                 .withOpacity(0.3),
@@ -276,7 +324,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                           'Outstanding Balance',
                           style: TextStyle(
                             fontSize: 12,
-                            color: _currentBalance <= 0
+                            color: _currentBalance <= Decimal.zero
                                 ? AppColors.success
                                 : AppColors.warning,
                             fontWeight: FontWeight.w600,
@@ -285,11 +333,13 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                         const SizedBox(height: 4),
                         Text(
                           _fin.formatCurrency(_currentBalance.abs()) +
-                              (_currentBalance < 0 ? ' (overpaid)' : ''),
+                              (_currentBalance < Decimal.zero
+                                  ? ' (overpaid)'
+                                  : ''),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: _currentBalance <= 0
+                            color: _currentBalance <= Decimal.zero
                                 ? AppColors.success
                                 : AppColors.warning,
                           ),
@@ -321,8 +371,8 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                       ),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
-                        final p = double.tryParse(v.replaceAll(',', ''));
-                        if (p == null || p == 0)
+                        final p = Decimal.tryParse(v.replaceAll(',', ''));
+                        if (p == null || p == Decimal.zero)
                           return 'Enter a non-zero amount';
                         return null;
                       },
@@ -345,6 +395,42 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                           )
                           .toList(),
                       onChanged: (v) => setState(() => _method = v ?? _method),
+                    ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _pickPaymentDate,
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          controller: _paymentDateCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Payment Date *',
+                            prefixIcon: Icon(Icons.calendar_month_outlined),
+                            hintText: 'Select payment date',
+                          ),
+                          validator: (v) => _paymentDate == null
+                              ? 'Please select a payment date'
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _referenceCtrl,
+                      decoration: InputDecoration(
+                        labelText: _method == PaymentMethod.cash
+                            ? 'Reference Number (optional)'
+                            : 'Reference Number *',
+                        prefixIcon: const Icon(
+                          Icons.confirmation_number_outlined,
+                        ),
+                      ),
+                      validator: (v) {
+                        final isRequired = _method != PaymentMethod.cash;
+                        if (isRequired && (v == null || v.trim().isEmpty)) {
+                          return 'Reference number is required';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
 

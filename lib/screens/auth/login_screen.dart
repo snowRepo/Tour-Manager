@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_banner.dart';
+import '../../widgets/brand_logo_card.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -114,22 +115,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.primaryDark,
-                                AppColors.primary,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Icon(
-                            Icons.flight_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                        const Align(
+                          alignment: Alignment.center,
+                          child: BrandLogoCard(),
                         ),
                         const SizedBox(height: 22),
                         const Text(

@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -120,7 +121,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       destination: _destinationCtrl.text.trim(),
       departureDate: _departureDate!.toIso8601String(),
       returnDate: _returnDate!.toIso8601String(),
-      totalCost: double.parse(_costCtrl.text.replaceAll(',', '')),
+      totalCost: Decimal.parse(_costCtrl.text.replaceAll(',', '')),
       status: _status,
       createdAt: now,
       updatedAt: now,
@@ -257,8 +258,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Required';
-                    final parsed = double.tryParse(v.replaceAll(',', ''));
-                    if (parsed == null || parsed <= 0) {
+                    final parsed = Decimal.tryParse(v.replaceAll(',', ''));
+                    if (parsed == null || parsed <= Decimal.zero) {
                       return 'Enter a valid amount';
                     }
                     return null;

@@ -19,10 +19,13 @@ class _EditClientScreenState extends State<EditClientScreen> {
   late final TextEditingController _firstNameCtrl;
   late final TextEditingController _lastNameCtrl;
   late final TextEditingController _otherNamesCtrl;
+  late final TextEditingController _passportCtrl;
+  late final TextEditingController _dateOfBirthCtrl;
   late final TextEditingController _phoneCtrl;
   late final TextEditingController _emailCtrl;
   late final TextEditingController _notesCtrl;
   late String _selectedGender;
+  DateTime? _dateOfBirth;
   bool _isLoading = false;
 
   @override
@@ -32,10 +35,19 @@ class _EditClientScreenState extends State<EditClientScreen> {
     _firstNameCtrl = TextEditingController(text: c.firstName);
     _lastNameCtrl = TextEditingController(text: c.lastName);
     _otherNamesCtrl = TextEditingController(text: c.otherNames);
+    _passportCtrl = TextEditingController(text: c.passportNumber);
     _phoneCtrl = TextEditingController(text: c.phone);
     _emailCtrl = TextEditingController(text: c.email);
     _notesCtrl = TextEditingController(text: c.notes);
     _selectedGender = c.gender;
+    _dateOfBirth = c.dateOfBirth.isNotEmpty
+        ? DateTime.tryParse(c.dateOfBirth)
+        : null;
+    _dateOfBirthCtrl = TextEditingController(
+      text: _dateOfBirth != null
+          ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}'
+          : '',
+    );
   }
 
   @override
@@ -44,6 +56,8 @@ class _EditClientScreenState extends State<EditClientScreen> {
       _firstNameCtrl,
       _lastNameCtrl,
       _otherNamesCtrl,
+      _passportCtrl,
+      _dateOfBirthCtrl,
       _phoneCtrl,
       _emailCtrl,
       _notesCtrl,
@@ -53,6 +67,22 @@ class _EditClientScreenState extends State<EditClientScreen> {
     super.dispose();
   }
 
+  Future<void> _pickDateOfBirth() async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _dateOfBirth ?? DateTime(today.year - 25, today.month, today.day),
+      firstDate: DateTime(1900),
+      lastDate: today,
+    );
+    if (picked == null) return;
+    setState(() {
+      _dateOfBirth = picked;
+      _dateOfBirthCtrl.text = '${picked.day}/${picked.month}/${picked.year}';
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -60,6 +90,8 @@ class _EditClientScreenState extends State<EditClientScreen> {
       firstName: _firstNameCtrl.text.trim(),
       lastName: _lastNameCtrl.text.trim(),
       otherNames: _otherNamesCtrl.text.trim(),
+      passportNumber: _passportCtrl.text.trim(),
+      dateOfBirth: _dateOfBirth?.toIso8601String() ?? '',
       phone: _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
       notes: _notesCtrl.text.trim(),
@@ -110,6 +142,26 @@ class _EditClientScreenState extends State<EditClientScreen> {
                 ),
                 const SizedBox(height: 12),
                 _field(_otherNamesCtrl, 'Other Names'),
+                const SizedBox(height: 12),
+                _field(
+                  _passportCtrl,
+                  'Passport Number',
+                  icon: Icons.badge_outlined,
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: _pickDateOfBirth,
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      controller: _dateOfBirthCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Date of Birth',
+                        prefixIcon: Icon(Icons.cake_outlined),
+                        hintText: 'Select date of birth',
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedGender,

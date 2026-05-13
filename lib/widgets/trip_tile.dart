@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../constants/app_constants.dart';
@@ -7,7 +8,7 @@ import '../services/financial_service.dart';
 class TripTile extends StatelessWidget {
   final TripModel trip;
   final String clientName;
-  final double balance;
+  final Decimal balance;
   final VoidCallback? onTap;
 
   const TripTile({
@@ -22,9 +23,9 @@ class TripTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = TripStatus.color(trip.status);
     final fin = FinancialService();
-    final dateStr =
-        DateFormat('dd MMM yyyy').format(DateTime.tryParse(trip.departureDate) ??
-            DateTime.now());
+    final dateStr = DateFormat(
+      'dd MMM yyyy',
+    ).format(DateTime.tryParse(trip.departureDate) ?? DateTime.now());
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -34,8 +35,7 @@ class TripTile extends StatelessWidget {
         side: const BorderSide(color: AppColors.divider),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         onTap: onTap,
         leading: Container(
           width: 48,
@@ -44,8 +44,11 @@ class TripTile extends StatelessWidget {
             color: statusColor.withOpacity(0.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(Icons.flight_takeoff_rounded,
-              color: statusColor, size: 22),
+          child: Icon(
+            Icons.flight_takeoff_rounded,
+            color: statusColor,
+            size: 22,
+          ),
         ),
         title: Text(
           trip.destination,
@@ -62,12 +65,16 @@ class TripTile extends StatelessWidget {
               Text(
                 clientName,
                 style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary),
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
             Text(
               dateStr,
               style: const TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary),
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -77,8 +84,7 @@ class TripTile extends StatelessWidget {
           children: [
             // Status chip
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
@@ -99,7 +105,7 @@ class TripTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: balance <= 0
+                color: balance <= Decimal.zero
                     ? AppColors.success
                     : AppColors.warning,
               ),

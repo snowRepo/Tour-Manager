@@ -18,6 +18,16 @@ class ClientTile extends StatelessWidget {
     this.onDelete,
   });
 
+  String _getClientInitials(ClientModel client) {
+    final names = client.fullName.split(' ');
+    if (names.length >= 2) {
+      return (names.first[0] + names.last[0]).toUpperCase();
+    } else if (names.first.isNotEmpty) {
+      return names.first[0].toUpperCase();
+    }
+    return '?';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -28,21 +38,20 @@ class ClientTile extends StatelessWidget {
         side: const BorderSide(color: AppColors.divider),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         onTap: onTap,
         leading: CircleAvatar(
           backgroundColor: AppColors.primary.withOpacity(0.12),
           radius: 24,
           child: Text(
-            client.firstName.isNotEmpty
-                ? client.firstName[0].toUpperCase()
-                : '?',
+            _getClientInitials(client),
             style: const TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.w700,
-              fontSize: 18,
+              fontSize: 16,
+              letterSpacing: 0.5,
             ),
+            textAlign: TextAlign.center,
           ),
         ),
         title: Text(
@@ -66,8 +75,7 @@ class ClientTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -83,8 +91,11 @@ class ClientTile extends StatelessWidget {
             ),
             if (onEdit != null || onDelete != null)
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert,
-                    size: 20, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.more_vert,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
                 onSelected: (val) {
                   if (val == 'edit') onEdit?.call();
                   if (val == 'delete') onDelete?.call();
@@ -106,11 +117,16 @@ class ClientTile extends StatelessWidget {
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline,
-                              size: 18, color: AppColors.error),
+                          Icon(
+                            Icons.delete_outline,
+                            size: 18,
+                            color: AppColors.error,
+                          ),
                           SizedBox(width: 8),
-                          Text('Delete',
-                              style: TextStyle(color: AppColors.error)),
+                          Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.error),
+                          ),
                         ],
                       ),
                     ),

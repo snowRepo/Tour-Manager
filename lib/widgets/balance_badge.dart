@@ -1,10 +1,11 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 
 /// Color-coded balance badge: Paid / Partial / Outstanding / Overpaid
 class BalanceBadge extends StatelessWidget {
-  final double balance;
-  final double totalCost;
+  final Decimal balance;
+  final Decimal totalCost;
 
   const BalanceBadge({
     super.key,
@@ -35,15 +36,15 @@ class BalanceBadge extends StatelessWidget {
   }
 
   String get _label {
-    if (balance < 0) return 'Overpaid';
-    if (balance == 0) return 'Fully Paid';
+    if (balance < Decimal.zero) return 'Overpaid';
+    if (balance == Decimal.zero) return 'Fully Paid';
     if (balance < totalCost) return 'Partial';
     return 'Unpaid';
   }
 
   Color get _color {
-    if (balance < 0) return AppColors.purple;
-    if (balance == 0) return AppColors.success;
+    if (balance < Decimal.zero) return AppColors.purple;
+    if (balance == Decimal.zero) return AppColors.success;
     if (balance < totalCost) return AppColors.warning;
     return AppColors.error;
   }

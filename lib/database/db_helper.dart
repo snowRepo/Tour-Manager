@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/user_model.dart';
@@ -24,7 +25,7 @@ class DbHelper {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async => await db.execute('PRAGMA foreign_keys = ON'),
@@ -33,7 +34,21 @@ class DbHelper {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute("ALTER TABLE clients ADD COLUMN gender TEXT DEFAULT 'Other'");
+      await db.execute(
+        "ALTER TABLE clients ADD COLUMN gender TEXT DEFAULT 'Other'",
+      );
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE clients ADD COLUMN passport_number TEXT DEFAULT ''",
+      );
+      await db.execute(
+        "ALTER TABLE clients ADD COLUMN date_of_birth TEXT DEFAULT ''",
+      );
+      await db.execute("ALTER TABLE payments ADD COLUMN reference_number TEXT");
+      await db.execute(
+        "ALTER TABLE payments ADD COLUMN payment_date TEXT DEFAULT ''",
+      );
     }
   }
 
@@ -58,6 +73,8 @@ class DbHelper {
         gender TEXT DEFAULT 'Other',
         phone TEXT DEFAULT '',
         email TEXT DEFAULT '',
+        passport_number TEXT DEFAULT '',
+        date_of_birth TEXT DEFAULT '',
         notes TEXT DEFAULT '',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
@@ -71,11 +88,11 @@ class DbHelper {
         destination TEXT NOT NULL,
         departure_date TEXT NOT NULL,
         return_date TEXT NOT NULL,
-        total_cost REAL NOT NULL,
+        total_cost TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        FOREIGN KEY (client_id) REFERENCES clients(id)
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
       )
     ''');
 
@@ -83,11 +100,13 @@ class DbHelper {
       CREATE TABLE payments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         trip_id INTEGER NOT NULL,
-        amount REAL NOT NULL,
+        amount TEXT NOT NULL,
         payment_method TEXT NOT NULL,
+        reference_number TEXT,
+        payment_date TEXT NOT NULL,
         note TEXT,
         created_at TEXT NOT NULL,
-        FOREIGN KEY (trip_id) REFERENCES trips(id)
+        FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
       )
     ''');
 
@@ -190,6 +209,12 @@ class DbHelper {
 
   Future<void> deleteClient(int id) async {
     final db = await database;
+    await db.delete(
+      'payments',
+      where: 'trip_id IN (SELECT id FROM trips WHERE client_id = ?)',
+      whereArgs: [id],
+    );
+    await db.delete('trips', where: 'client_id = ?', whereArgs: [id]);
     await db.delete('clients', where: 'id = ?', whereArgs: [id]);
   }
 
@@ -241,6 +266,7 @@ class DbHelper {
 
   Future<void> deleteTrip(int id) async {
     final db = await database;
+    await db.delete('payments', where: 'trip_id = ?', whereArgs: [id]);
     await db.delete('trips', where: 'id = ?', whereArgs: [id]);
   }
 
@@ -310,12 +336,12 @@ class DbHelper {
     await batch.commit(noResult: true);
   }
 
-  Future<double> getTotalRevenue() async {
+  Future<Decimal> getTotalRevenue() async {
     final db = await database;
     final result = await db.rawQuery(
       'SELECT SUM(amount) as total FROM payments WHERE amount > 0',
     );
-    return ((result.first['total'] as num?) ?? 0).toDouble();
+    return Decimal.parse(((result.first['total'] as num?) ?? 0).toString());
   }
 
   // ── Settings ───────────────────────────────────────────────────────────────

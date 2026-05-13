@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
@@ -23,7 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _clientCount = 0;
   int _tripCount = 0;
   int _activeTrips = 0;
-  double _totalRevenue = 0;
+  Decimal _totalRevenue = Decimal.zero;
   bool _isLoading = true;
 
   @override
@@ -227,7 +228,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (tripProv.isLoading)
                     const Center(child: CircularProgressIndicator())
                   else if (recentTrips.isEmpty)
-                    _emptyCard('No trips yet. Create one!', Icons.flight_rounded)
+                    _emptyCard(
+                      'No trips yet. Create one!',
+                      Icons.flight_rounded,
+                    )
                   else
                     ListView.builder(
                       shrinkWrap: true,
@@ -305,8 +309,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Icon(icon, size: 40, color: AppColors.divider),
           const SizedBox(height: 12),
-          Text(text,
-              style: const TextStyle(color: AppColors.textSecondary)),
+          Text(text, style: const TextStyle(color: AppColors.textSecondary)),
         ],
       ),
     );

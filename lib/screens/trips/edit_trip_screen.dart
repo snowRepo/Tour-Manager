@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -97,7 +98,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
       return;
     }
 
-    final newCost = double.parse(_costCtrl.text.replaceAll(',', ''));
+    final newCost = Decimal.parse(_costCtrl.text.replaceAll(',', ''));
     final tripProvider = context.read<TripProvider>();
     if (_hasPayments && newCost != widget.trip.totalCost) {
       final confirm = await showDialog<bool>(
@@ -212,8 +213,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Required';
-                    final p = double.tryParse(v.replaceAll(',', ''));
-                    if (p == null || p <= 0) return 'Enter a valid amount';
+                    final p = Decimal.tryParse(v.replaceAll(',', ''));
+                    if (p == null || p <= Decimal.zero)
+                      return 'Enter a valid amount';
                     return null;
                   },
                 ),

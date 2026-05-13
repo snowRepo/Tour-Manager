@@ -18,10 +18,13 @@ class _AddClientScreenState extends State<AddClientScreen> {
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _otherNamesCtrl = TextEditingController();
+  final _passportCtrl = TextEditingController();
+  final _dateOfBirthCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   String _selectedGender = 'Other';
+  DateTime? _dateOfBirth;
   bool _isLoading = false;
 
   @override
@@ -30,6 +33,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
       _firstNameCtrl,
       _lastNameCtrl,
       _otherNamesCtrl,
+      _passportCtrl,
+      _dateOfBirthCtrl,
       _phoneCtrl,
       _emailCtrl,
       _notesCtrl,
@@ -37,6 +42,22 @@ class _AddClientScreenState extends State<AddClientScreen> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _pickDateOfBirth() async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _dateOfBirth ?? DateTime(today.year - 25, today.month, today.day),
+      firstDate: DateTime(1900),
+      lastDate: today,
+    );
+    if (picked == null) return;
+    setState(() {
+      _dateOfBirth = picked;
+      _dateOfBirthCtrl.text = '${picked.day}/${picked.month}/${picked.year}';
+    });
   }
 
   Future<void> _save() async {
@@ -47,6 +68,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
       firstName: _firstNameCtrl.text.trim(),
       lastName: _lastNameCtrl.text.trim(),
       otherNames: _otherNamesCtrl.text.trim(),
+      passportNumber: _passportCtrl.text.trim(),
+      dateOfBirth: _dateOfBirth?.toIso8601String() ?? '',
       phone: _phoneCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
       notes: _notesCtrl.text.trim(),
@@ -103,6 +126,26 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 _label('Additional Info'),
                 const SizedBox(height: 12),
                 _field(_otherNamesCtrl, 'Other Names'),
+                const SizedBox(height: 12),
+                _field(
+                  _passportCtrl,
+                  'Passport Number',
+                  icon: Icons.badge_outlined,
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: _pickDateOfBirth,
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      controller: _dateOfBirthCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Date of Birth',
+                        prefixIcon: Icon(Icons.cake_outlined),
+                        hintText: 'Select date of birth',
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedGender,

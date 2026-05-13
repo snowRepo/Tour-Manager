@@ -192,12 +192,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final error = await context.read<ClientProvider>().deleteClient(id);
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString()),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 5),
-        ),
+      showAppBanner(
+        context,
+        error.toString(),
+        backgroundColor: AppColors.error,
+        icon: Icons.error_outline,
       );
     } else {
       showAppBanner(

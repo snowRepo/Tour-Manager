@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:decimal/decimal.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -59,7 +60,12 @@ class PdfService {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.only(left: 40, top: 80, right: 40, bottom: 40),
+        margin: const pw.EdgeInsets.only(
+          left: 40,
+          top: 80,
+          right: 40,
+          bottom: 40,
+        ),
         build: (context) => [
           // Header
           _header(bizName, bizPhone, bizEmail, bizLogo),
@@ -74,6 +80,10 @@ class PdfService {
           _infoRow('Full Name', client.fullName),
           if (client.phone.isNotEmpty) _infoRow('Phone', client.phone),
           if (client.email.isNotEmpty) _infoRow('Email', client.email),
+          if (client.passportNumber.isNotEmpty)
+            _infoRow('Passport', client.passportNumber),
+          if (client.dateOfBirth.isNotEmpty)
+            _infoRow('Date of Birth', _fmtDate(client.dateOfBirth)),
           pw.SizedBox(height: 12),
 
           // Trip Info
@@ -105,7 +115,7 @@ class PdfService {
               _tableRow(
                 'Outstanding Balance',
                 _fin.formatCurrency(balance.abs()) +
-                    (balance < 0 ? ' (overpaid)' : ''),
+                    (balance < Decimal.zero ? ' (overpaid)' : ''),
                 highlight: true,
               ),
             ],
@@ -122,7 +132,8 @@ class PdfService {
                 0: const pw.FlexColumnWidth(2),
                 1: const pw.FlexColumnWidth(2),
                 2: const pw.FlexColumnWidth(2),
-                3: const pw.FlexColumnWidth(3),
+                3: const pw.FlexColumnWidth(2),
+                4: const pw.FlexColumnWidth(3),
               },
               children: [
                 _paymentHeaderRow(),
@@ -162,7 +173,12 @@ class PdfService {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.only(left: 40, top: 80, right: 40, bottom: 40),
+        margin: const pw.EdgeInsets.only(
+          left: 40,
+          top: 80,
+          right: 40,
+          bottom: 40,
+        ),
         build: (context) => [
           _header(bizName, bizPhone, bizEmail, bizLogo),
           pw.SizedBox(height: 16),
@@ -183,7 +199,12 @@ class PdfService {
 
   // ── Helper Widgets ─────────────────────────────────────────────────────────
 
-  pw.Widget _header(String name, String phone, String email, String? logoBase64) {
+  pw.Widget _header(
+    String name,
+    String phone,
+    String email,
+    String? logoBase64,
+  ) {
     return pw.Row(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -303,7 +324,7 @@ class PdfService {
   pw.TableRow _paymentHeaderRow() {
     return pw.TableRow(
       decoration: const pw.BoxDecoration(color: PdfColors.blueGrey50),
-      children: ['Date', 'Method', 'Amount', 'Note']
+      children: ['Date', 'Method', 'Reference', 'Amount', 'Note']
           .map(
             (h) => pw.Padding(
               padding: const pw.EdgeInsets.all(6),
@@ -326,7 +347,7 @@ class PdfService {
         pw.Padding(
           padding: const pw.EdgeInsets.all(6),
           child: pw.Text(
-            _fmtDate(p.createdAt),
+            _fmtDate(p.paymentDate),
             style: const pw.TextStyle(fontSize: 9),
           ),
         ),
@@ -334,6 +355,13 @@ class PdfService {
           padding: const pw.EdgeInsets.all(6),
           child: pw.Text(
             PaymentMethod.label(p.paymentMethod),
+            style: const pw.TextStyle(fontSize: 9),
+          ),
+        ),
+        pw.Padding(
+          padding: const pw.EdgeInsets.all(6),
+          child: pw.Text(
+            p.referenceNumber?.isNotEmpty == true ? p.referenceNumber! : '-',
             style: const pw.TextStyle(fontSize: 9),
           ),
         ),

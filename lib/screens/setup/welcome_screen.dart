@@ -49,28 +49,11 @@ class WelcomeScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primaryDark, AppColors.primary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.18),
-                              blurRadius: 30,
-                              offset: const Offset(0, 16),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.flight_takeoff_rounded,
-                          color: Colors.white,
-                          size: 44,
-                        ),
+                      Image.asset(
+                        'Tour1.png',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 28),
                       const Text(

@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
@@ -7,6 +8,7 @@ import '../../providers/trip_provider.dart';
 import '../../database/db_helper.dart';
 import '../../widgets/trip_tile.dart';
 import '../../widgets/confirm_dialog.dart';
+import '../../widgets/app_banner.dart';
 import '../../services/financial_service.dart';
 import '../../widgets/screen_background.dart';
 
@@ -37,6 +39,16 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
     setState(() => _isLoading = false);
   }
 
+  String _getClientInitials(ClientModel client) {
+    final names = client.fullName.split(' ');
+    if (names.length >= 2) {
+      return (names.first[0] + names.last[0]).toUpperCase();
+    } else if (names.first.isNotEmpty) {
+      return names.first[0].toUpperCase();
+    }
+    return '?';
+  }
+
   Future<void> _delete() async {
     final confirm = await ConfirmDialog.show(
       context,
@@ -50,14 +62,19 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
     );
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString()),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 6),
-        ),
+      showAppBanner(
+        context,
+        error.toString(),
+        backgroundColor: AppColors.error,
+        icon: Icons.error_outline,
       );
     } else {
+      showAppBanner(
+        context,
+        'Client deleted',
+        backgroundColor: AppColors.success,
+        icon: Icons.check_circle_outline,
+      );
       Navigator.pop(context);
     }
   }
@@ -147,7 +164,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                     itemCount: tripProv.trips.length,
                     itemBuilder: (_, i) {
                       final trip = tripProv.trips[i];
-                      return FutureBuilder<double>(
+                      return FutureBuilder<Decimal>(
                         future: _db
                             .getPaymentsByTrip(trip.id!)
                             .then(
@@ -192,15 +209,17 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
       child: Column(
         children: [
           CircleAvatar(
-            radius: 36,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            radius: 40,
+            backgroundColor: AppColors.primary.withOpacity(0.12),
             child: Text(
-              c.firstName.isNotEmpty ? c.firstName[0].toUpperCase() : '?',
+              _getClientInitials(c),
               style: const TextStyle(
-                fontSize: 30,
+                fontSize: 28,
                 fontWeight: FontWeight.w700,
                 color: AppColors.primary,
+                letterSpacing: 0.5,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 12),
@@ -217,6 +236,15 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
           const Divider(),
           const SizedBox(height: 8),
           _infoRow(Icons.person_outline, c.gender),
+          if (c.passportNumber.isNotEmpty)
+            _infoRow(Icons.badge_outlined, c.passportNumber),
+          if (c.dateOfBirth.isNotEmpty)
+            _infoRow(
+              Icons.cake_outlined,
+              DateTime.tryParse(c.dateOfBirth) != null
+                  ? '${DateTime.parse(c.dateOfBirth).day}/${DateTime.parse(c.dateOfBirth).month}/${DateTime.parse(c.dateOfBirth).year}'
+                  : c.dateOfBirth,
+            ),
           if (c.phone.isNotEmpty) _infoRow(Icons.phone_outlined, c.phone),
           if (c.email.isNotEmpty) _infoRow(Icons.email_outlined, c.email),
           if (c.notes.isNotEmpty) _infoRow(Icons.notes_rounded, c.notes),

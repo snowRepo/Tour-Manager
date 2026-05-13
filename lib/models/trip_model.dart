@@ -1,10 +1,12 @@
+import 'package:decimal/decimal.dart';
+
 class TripModel {
   final int? id;
   final int clientId;
   final String destination;
   final String departureDate;
   final String returnDate;
-  final double totalCost;
+  final Decimal totalCost;
   final String status;
   final String createdAt;
   final String updatedAt;
@@ -22,28 +24,28 @@ class TripModel {
   });
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'client_id': clientId,
-        'destination': destination,
-        'departure_date': departureDate,
-        'return_date': returnDate,
-        'total_cost': totalCost,
-        'status': status,
-        'created_at': createdAt,
-        'updated_at': updatedAt,
-      };
+    if (id != null) 'id': id,
+    'client_id': clientId,
+    'destination': destination,
+    'departure_date': departureDate,
+    'return_date': returnDate,
+    'total_cost': totalCost.toString(),
+    'status': status,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+  };
 
   factory TripModel.fromMap(Map<String, dynamic> map) => TripModel(
-        id: map['id'] as int?,
-        clientId: map['client_id'] as int,
-        destination: map['destination'] as String,
-        departureDate: map['departure_date'] as String,
-        returnDate: map['return_date'] as String,
-        totalCost: (map['total_cost'] as num).toDouble(),
-        status: map['status'] as String,
-        createdAt: map['created_at'] as String,
-        updatedAt: map['updated_at'] as String,
-      );
+    id: map['id'] as int?,
+    clientId: map['client_id'] as int,
+    destination: map['destination'] as String,
+    departureDate: map['departure_date'] as String,
+    returnDate: map['return_date'] as String,
+    totalCost: Decimal.parse(map['total_cost'].toString()),
+    status: map['status'] as String,
+    createdAt: map['created_at'] as String,
+    updatedAt: map['updated_at'] as String,
+  );
 
   TripModel copyWith({
     int? id,
@@ -51,20 +53,19 @@ class TripModel {
     String? destination,
     String? departureDate,
     String? returnDate,
-    double? totalCost,
+    Decimal? totalCost,
     String? status,
     String? createdAt,
     String? updatedAt,
-  }) =>
-      TripModel(
-        id: id ?? this.id,
-        clientId: clientId ?? this.clientId,
-        destination: destination ?? this.destination,
-        departureDate: departureDate ?? this.departureDate,
-        returnDate: returnDate ?? this.returnDate,
-        totalCost: totalCost ?? this.totalCost,
-        status: status ?? this.status,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  }) => TripModel(
+    id: id ?? this.id,
+    clientId: clientId ?? this.clientId,
+    destination: destination ?? this.destination,
+    departureDate: departureDate ?? this.departureDate,
+    returnDate: returnDate ?? this.returnDate,
+    totalCost: totalCost ?? this.totalCost,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 }

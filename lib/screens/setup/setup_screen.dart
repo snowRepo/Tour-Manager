@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_constants.dart';
+import '../../widgets/brand_logo_card.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -110,7 +111,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
-                      vertical: 28,
+                      vertical: 22,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
@@ -126,24 +127,11 @@ class _SetupScreenState extends State<SetupScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.primaryDark,
-                                AppColors.primary,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Icon(
-                            Icons.flight_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                        const Align(
+                          alignment: Alignment.center,
+                          child: BrandLogoCard(size: 80),
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 16),
                         const Text(
                           'Welcome to Tour Manager',
                           style: TextStyle(
